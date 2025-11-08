@@ -45,22 +45,52 @@ class WebSearcher:
 
         try:
             ddgs = DDGS()
-            search_results = ddgs.text(query, max_results=num_results)
-
-            for result in search_results:
-                results.append({
-                    "title": result.get("title", ""),
-                    "url": result.get("href", ""),
-                    "snippet": result.get("body", ""),
-                })
-        except Exception as e:
-            logger.error(f"DuckDuckGo search failed: {e}")
-            raise WebSearchError(
-                f"Search failed: {str(e)}",
-                error_code="SEARCH_FAILED"
+            search_results = ddgs.text(
+                query,
+                max_results=num_results,
+                backend="api"  # Use API backend for more reliable results
             )
 
-        logger.info(f"Found {len(results)} results")
+            # Convert generator to list and process results
+            for result in search_results:
+                if isinstance(result, dict):
+                    url = result.get("href") or result.get("url") or result.get("link", "")
+                    if url:  # Only add if we have a valid URL
+                        results.append({
+                            "title": result.get("title", ""),
+                            "url": url,
+                            "snippet": result.get("body", "") or result.get("snippet", ""),
+                        })
+
+            logger.info(f"Found {len(results)} results for query: {query}")
+
+        except Exception as e:
+            logger.error(f"DuckDuckGo search failed: {e}")
+            # Try with different backend as fallback
+            try:
+                logger.info("Retrying with alternative backend...")
+                ddgs = DDGS()
+                search_results = ddgs.text(query, max_results=num_results)
+
+                for result in search_results:
+                    if isinstance(result, dict):
+                        url = result.get("href") or result.get("url") or result.get("link", "")
+                        if url:
+                            results.append({
+                                "title": result.get("title", ""),
+                                "url": url,
+                                "snippet": result.get("body", "") or result.get("snippet", ""),
+                            })
+
+                logger.info(f"Fallback search found {len(results)} results")
+
+            except Exception as fallback_error:
+                logger.error(f"Fallback search also failed: {fallback_error}")
+                raise WebSearchError(
+                    f"Search failed: {str(e)}. Fallback also failed: {str(fallback_error)}",
+                    error_code="SEARCH_FAILED"
+                )
+
         return results
 
     def search_news(
@@ -84,21 +114,48 @@ class WebSearcher:
             news_results = ddgs.news(query, max_results=num_results)
 
             for result in news_results:
-                results.append({
-                    "title": result.get("title", ""),
-                    "url": result.get("url", ""),
-                    "snippet": result.get("body", ""),
-                    "date": result.get("date", ""),
-                    "source": result.get("source", ""),
-                })
+                if isinstance(result, dict):
+                    url = result.get("url") or result.get("href") or result.get("link", "")
+                    if url:
+                        results.append({
+                            "title": result.get("title", ""),
+                            "url": url,
+                            "snippet": result.get("body", "") or result.get("snippet", ""),
+                            "date": result.get("date", ""),
+                            "source": result.get("source", ""),
+                        })
+
+            logger.info(f"Found {len(results)} news articles for query: {query}")
+
         except Exception as e:
             logger.error(f"News search failed: {e}")
-            raise WebSearchError(
-                f"News search failed: {str(e)}",
-                error_code="NEWS_SEARCH_FAILED"
-            )
+            # Fallback to regular search if news search fails
+            try:
+                logger.info("News search failed, falling back to regular search...")
+                ddgs = DDGS()
+                search_results = ddgs.text(query, max_results=num_results)
 
-        logger.info(f"Found {len(results)} news articles")
+                for result in search_results:
+                    if isinstance(result, dict):
+                        url = result.get("href") or result.get("url") or result.get("link", "")
+                        if url:
+                            results.append({
+                                "title": result.get("title", ""),
+                                "url": url,
+                                "snippet": result.get("body", "") or result.get("snippet", ""),
+                                "date": "",
+                                "source": "",
+                            })
+
+                logger.info(f"Fallback search found {len(results)} results")
+
+            except Exception as fallback_error:
+                logger.error(f"Fallback search also failed: {fallback_error}")
+                raise WebSearchError(
+                    f"News search failed: {str(e)}. Fallback also failed: {str(fallback_error)}",
+                    error_code="NEWS_SEARCH_FAILED"
+                )
+
         return results
 
     def filter_by_domain(
