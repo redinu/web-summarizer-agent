@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: web-summarizer-agent
+    runtime: docker
+    region: oregon
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PORT
+        value: 8000
+      - key: DEFAULT_MODEL
+        value: models/gemini-2.5-flash
+    healthCheckPath: /health
+    autoDeploy: true
