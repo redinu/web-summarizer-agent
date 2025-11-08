@@ -34,10 +34,10 @@ class WebSearcher:
         logger.info(f"Searching for: {query}")
 
         try:
-            from ddgs import DDGS
+            from duckduckgo_search import DDGS
         except ImportError:
             raise WebSearchError(
-                "ddgs is not installed. Install with: pip install ddgs",
+                "duckduckgo-search is not installed. Install with: pip install duckduckgo-search",
                 error_code="MISSING_DEPENDENCY"
             )
 
@@ -70,10 +70,10 @@ class WebSearcher:
     ) -> List[Dict[str, str]]:
         """Search for news articles"""
         try:
-            from ddgs import DDGS
+            from duckduckgo_search import DDGS
         except ImportError:
             raise WebSearchError(
-                "ddgs is not installed. Install with: pip install ddgs",
+                "duckduckgo-search is not installed. Install with: pip install duckduckgo-search",
                 error_code="MISSING_DEPENDENCY"
             )
 
