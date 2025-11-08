@@ -55,7 +55,7 @@ class SummarizeURLRequest(BaseModel):
     max_summary_sentences: Optional[int] = 4
     num_key_points: Optional[int] = 5
     include_citations: Optional[bool] = False
-    model: Optional[str] = "gemini-1.5-flash"
+    model: Optional[str] = "models/gemini-2.5-flash"
 
 
 class AdvancedSummarizeRequest(BaseModel):
@@ -224,9 +224,10 @@ async def root():
                 <div class="form-group">
                     <label for="model">AI Model</label>
                     <select id="model" name="model">
-                        <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (Fast & Cheap)</option>
-                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Best Quality)</option>
-                        <option value="gemini-1.0-pro">Gemini 1.0 Pro (Stable)</option>
+                        <option value="models/gemini-2.5-flash" selected>Gemini 2.5 Flash (Fastest & Cheapest)</option>
+                        <option value="models/gemini-2.5-pro">Gemini 2.5 Pro (Best Quality)</option>
+                        <option value="models/gemini-flash-latest">Gemini Flash Latest</option>
+                        <option value="models/gemini-pro-latest">Gemini Pro Latest</option>
                     </select>
                 </div>
 

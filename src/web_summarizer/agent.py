@@ -160,7 +160,7 @@ class WebSummarizerAgent:
         max_summary_sentences: int = 4,
         num_key_points: int = 5,
         include_citations: bool = False,
-        model: str = "gemini-1.5-flash",
+        model: str = "models/gemini-2.5-flash",
     ) -> SummaryResponse:
         """
         Convenience method to summarize a URL with simple parameters
