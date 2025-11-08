@@ -14,7 +14,7 @@ load_dotenv()
 def main():
     # Initialize agent
     agent = WebSummarizerAgent(
-        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+        gemini_api_key=os.getenv("GEMINI_API_KEY"),
     )
 
     # Custom options
@@ -22,13 +22,13 @@ def main():
         max_summary_sentences=6,
         num_key_points=8,
         include_citations=True,
-        model="claude-3-5-sonnet-20241022",  # Use more powerful model
+        model="gemini-1.5-pro",  # Use more powerful model
         timeout_seconds=30,
     )
 
     # Create request
     request = SummaryRequest(
-        url="https://www.anthropic.com/research",
+        url="https://blog.google/technology/ai/",
         options=options,
     )
 

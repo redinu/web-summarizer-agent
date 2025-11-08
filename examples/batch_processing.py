@@ -13,14 +13,14 @@ load_dotenv()
 def main():
     # Initialize agent
     agent = WebSummarizerAgent(
-        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+        gemini_api_key=os.getenv("GEMINI_API_KEY"),
     )
 
     # URLs to summarize
     urls = [
-        "https://www.anthropic.com/news/claude-3-5-sonnet",
-        "https://www.anthropic.com/news/claude-3-family",
-        "https://blog.anthropic.com/constitutional-ai-harmlessness-from-ai-feedback",
+        "https://blog.google/technology/ai/google-gemini-ai/",
+        "https://deepmind.google/technologies/gemini/",
+        "https://blog.google/technology/ai/",
     ]
 
     print("Batch Processing Example")

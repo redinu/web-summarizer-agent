@@ -1,5 +1,5 @@
 """
-AI-powered summarization module
+AI-powered summarization module using Google Gemini
 """
 
 import json
@@ -7,7 +7,8 @@ import logging
 import os
 from typing import Dict, List, Optional
 
-from anthropic import Anthropic, APIError, APITimeoutError
+import google.generativeai as genai
+from google.generativeai.types import GenerationConfig
 
 logger = logging.getLogger(__name__)
 
@@ -22,20 +23,21 @@ class SummarizationError(Exception):
 
 
 class AISummarizer:
-    """AI-powered text summarization using Claude"""
+    """AI-powered text summarization using Google Gemini"""
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
-            raise ValueError("ANTHROPIC_API_KEY must be set in environment or provided")
+            raise ValueError("GEMINI_API_KEY must be set in environment or provided")
 
-        self.client = Anthropic(api_key=self.api_key)
+        # Configure Gemini
+        genai.configure(api_key=self.api_key)
 
     def summarize(
         self,
         text: str,
         title: Optional[str] = None,
-        model: str = "claude-3-haiku-20240307",
+        model: str = "gemini-1.5-flash",
         max_summary_sentences: int = 4,
         num_key_points: int = 5,
         include_citations: bool = False,
@@ -77,17 +79,24 @@ class AISummarizer:
 
             logger.info(f"Sending {len(text)} characters to {model} for summarization")
 
-            # Call Claude API
-            response = self.client.messages.create(
-                model=model,
-                max_tokens=2048,
+            # Initialize Gemini model
+            gemini_model = genai.GenerativeModel(model)
+
+            # Configure generation
+            generation_config = GenerationConfig(
                 temperature=0.3,
-                messages=[{"role": "user", "content": prompt}],
-                timeout=timeout,
+                max_output_tokens=2048,
+            )
+
+            # Call Gemini API
+            response = gemini_model.generate_content(
+                prompt,
+                generation_config=generation_config,
+                request_options={"timeout": timeout},
             )
 
             # Extract response content
-            content = response.content[0].text
+            content = response.text
 
             # Parse JSON response
             try:
@@ -98,25 +107,39 @@ class AISummarizer:
                 result = self._extract_from_text(content)
 
             # Add metadata
-            result["tokens_used"] = response.usage.input_tokens + response.usage.output_tokens
+            # Gemini provides token counts in usage_metadata
+            tokens_used = 0
+            if hasattr(response, 'usage_metadata'):
+                tokens_used = (
+                    response.usage_metadata.prompt_token_count +
+                    response.usage_metadata.candidates_token_count
+                )
+
+            result["tokens_used"] = tokens_used
             result["model_used"] = model
 
             logger.info(f"Summarization complete. Tokens used: {result['tokens_used']}")
 
             return result
 
-        except APITimeoutError:
-            raise SummarizationError(
-                f"AI request timeout after {timeout} seconds",
-                error_code="AI_TIMEOUT",
-            )
-        except APIError as e:
-            logger.error(f"Anthropic API error: {e}")
-            raise SummarizationError(
-                f"AI API error: {str(e)}",
-                error_code="AI_API_ERROR",
-            )
         except Exception as e:
+            error_message = str(e)
+
+            # Check for timeout
+            if "timeout" in error_message.lower():
+                raise SummarizationError(
+                    f"AI request timeout after {timeout} seconds",
+                    error_code="AI_TIMEOUT",
+                )
+
+            # Check for API errors
+            if "api" in error_message.lower() or "quota" in error_message.lower():
+                logger.error(f"Gemini API error: {e}")
+                raise SummarizationError(
+                    f"AI API error: {str(e)}",
+                    error_code="AI_API_ERROR",
+                )
+
             logger.error(f"Summarization failed: {e}")
             raise SummarizationError(
                 f"Failed to summarize content: {str(e)}",

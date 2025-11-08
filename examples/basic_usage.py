@@ -15,11 +15,11 @@ load_dotenv()
 def main():
     # Initialize the agent
     agent = WebSummarizerAgent(
-        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+        gemini_api_key=os.getenv("GEMINI_API_KEY"),
     )
 
     # Example URL to summarize
-    url = "https://www.anthropic.com/news/claude-3-5-sonnet"
+    url = "https://blog.google/technology/ai/google-gemini-ai/"
 
     print(f"Summarizing: {url}\n")
 

@@ -31,7 +31,7 @@ class WebSummarizerAgent:
 
     def __init__(
         self,
-        anthropic_api_key: Optional[str] = None,
+        gemini_api_key: Optional[str] = None,
         timeout: int = 10,
         max_redirects: int = 3,
         user_agent: str = "WebSummarizerAgent/1.0.0",
@@ -42,7 +42,7 @@ class WebSummarizerAgent:
         Initialize the Web Summarizer Agent
 
         Args:
-            anthropic_api_key: API key for Anthropic Claude
+            gemini_api_key: API key for Google Gemini
             timeout: Request timeout in seconds
             max_redirects: Maximum number of redirects to follow
             user_agent: User agent string for requests
@@ -58,7 +58,7 @@ class WebSummarizerAgent:
             min_content_length=min_content_length,
             max_content_length=max_content_length,
         )
-        self.summarizer = AISummarizer(api_key=anthropic_api_key)
+        self.summarizer = AISummarizer(api_key=gemini_api_key)
 
         logger.info("WebSummarizerAgent initialized")
 
@@ -160,7 +160,7 @@ class WebSummarizerAgent:
         max_summary_sentences: int = 4,
         num_key_points: int = 5,
         include_citations: bool = False,
-        model: str = "claude-3-haiku-20240307",
+        model: str = "gemini-1.5-flash",
     ) -> SummaryResponse:
         """
         Convenience method to summarize a URL with simple parameters

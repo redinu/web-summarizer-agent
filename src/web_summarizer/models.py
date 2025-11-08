@@ -14,7 +14,7 @@ class SummaryOptions(BaseModel):
     max_summary_sentences: int = Field(default=4, ge=1, le=10)
     num_key_points: int = Field(default=5, ge=1, le=10)
     include_citations: bool = Field(default=False)
-    model: str = Field(default="claude-3-haiku-20240307")
+    model: str = Field(default="gemini-1.5-flash")
     timeout_seconds: int = Field(default=15, ge=1, le=60)
 
     @field_validator("model")
@@ -22,10 +22,9 @@ class SummaryOptions(BaseModel):
     def validate_model(cls, v: str) -> str:
         """Validate model name"""
         allowed_models = [
-            "claude-3-haiku-20240307",
-            "claude-3-sonnet-20240229",
-            "claude-3-opus-20240229",
-            "claude-3-5-sonnet-20241022",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro",
+            "gemini-1.0-pro",
         ]
         if v not in allowed_models:
             raise ValueError(f"Model must be one of: {', '.join(allowed_models)}")
