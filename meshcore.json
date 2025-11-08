@@ -24,13 +24,13 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/redietdagnew/web-summarizer-agent"
+    "url": "https://github.com/redinu/web-summarizer-agent"
   },
-  "homepage": "https://github.com/redietdagnew/web-summarizer-agent",
-  "documentation": "https://github.com/redietdagnew/web-summarizer-agent#readme",
+  "homepage": "https://github.com/redinu/web-summarizer-agent",
+  "documentation": "https://github.com/redinu/web-summarizer-agent#readme",
   "api": {
     "type": "rest",
-    "base_url": "http://localhost:8000",
+    "base_url": "https://web-summarizer-agent.onrender.com",
     "openapi_spec": "/docs",
     "endpoints": [
       {
@@ -70,6 +70,28 @@
         "path": "/health",
         "method": "GET",
         "description": "Health check endpoint"
+      },
+      {
+        "path": "/search-and-aggregate",
+        "method": "POST",
+        "description": "Search web for a topic and aggregate summaries with social media posts",
+        "request_schema": {
+          "topic": "string (required)",
+          "num_results": "integer (default: 10)",
+          "search_type": "string (default: web, options: web|news)",
+          "platforms": "array[string] (default: [twitter, linkedin, facebook])",
+          "max_workers": "integer (default: 5)"
+        }
+      },
+      {
+        "path": "/search-and-aggregate/export",
+        "method": "POST",
+        "description": "Search and aggregate, then export to Excel/CSV",
+        "request_schema": {
+          "topic": "string (required)",
+          "num_results": "integer (default: 10)",
+          "export_format": "string (default: xlsx, options: xlsx|csv)"
+        }
       }
     ]
   },
@@ -84,7 +106,10 @@
       "pydantic>=2.0.0",
       "python-dotenv>=1.0.0",
       "fastapi>=0.104.0",
-      "uvicorn[standard]>=0.24.0"
+      "uvicorn[standard]>=0.24.0",
+      "openpyxl>=3.1.0",
+      "ddgs>=1.0.0",
+      "reportlab>=4.0.0"
     ]
   },
   "environment": {
