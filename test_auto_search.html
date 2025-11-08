@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auto-Search Topic Aggregation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .feature-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .feature-box h2 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .feature-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .form-group {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .platform-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .platform-checkboxes label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .platform-checkboxes label:hover {
+            background: #e9ecef;
+        }
+        .platform-checkboxes input {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        button.csv {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .loading {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            font-size: 16px;
+        }
+        .spinner {
+            border: 3px solid #ffffff33;
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .success {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            border-radius: 8px;
+            color: #155724;
+        }
+        .error {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            border-radius: 8px;
+            color: #721c24;
+        }
+        .example-topics {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .example-topics strong {
+            color: #856404;
+        }
+        .example-topics .topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .example-topics .topic-tag {
+            background: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid #ffc107;
+            transition: all 0.2s;
+        }
+        .example-topics .topic-tag:hover {
+            background: #ffc107;
+            color: white;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Auto-Search Topic Aggregation</h1>
+        <p class="subtitle">Just enter a topic - we'll find, summarize, and create social media posts automatically!</p>
+
+        <div class="feature-box">
+            <h2>✨ How It Works</h2>
+            <ul>
+                <li>🔎 Automatically searches the web for your topic</li>
+                <li>📰 Finds relevant blog posts and articles</li>
+                <li>🤖 AI summarizes each article using Google Gemini</li>
+                <li>📱 Generates platform-optimized social media posts</li>
+                <li>📊 Exports everything to a beautiful spreadsheet</li>
+            </ul>
+        </div>
+
+        <form id="searchForm">
+            <div class="form-group">
+                <label for="topic">📝 Topic *</label>
+                <input type="text" id="topic" name="topic"
+                       placeholder="e.g., parenthood, artificial intelligence, climate change"
+                       value="parenthood" required>
+
+                <div class="example-topics">
+                    <strong>💡 Example Topics:</strong>
+                    <div class="topics">
+                        <span class="topic-tag" onclick="setTopic('parenthood')">parenthood</span>
+                        <span class="topic-tag" onclick="setTopic('artificial intelligence')">artificial intelligence</span>
+                        <span class="topic-tag" onclick="setTopic('sustainable living')">sustainable living</span>
+                        <span class="topic-tag" onclick="setTopic('remote work')">remote work</span>
+                        <span class="topic-tag" onclick="setTopic('mental health')">mental health</span>
+                        <span class="topic-tag" onclick="setTopic('digital marketing')">digital marketing</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="num_results">🔢 Number of Articles</label>
+                <input type="number" id="num_results" name="num_results"
+                       value="5" min="1" max="10">
+                <small style="color: #666;">How many articles to find and summarize (1-10)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="search_type">🔍 Search Type</label>
+                <select id="search_type" name="search_type">
+                    <option value="web">Web Search (Blogs & Articles)</option>
+                    <option value="news">News Search (Recent News)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📱 Social Media Platforms</label>
+                <div class="platform-checkboxes">
+                    <label>
+                        <input type="checkbox" name="platform" value="twitter" checked>
+                        <span>🐦 Twitter/X (280 chars)</span>
+                    </label>
+                    <label>
+                        <input type="checkbox" name="platform" value="linkedin" checked>
+                        <span>💼 LinkedIn (Professional)</span>
+                    </label>
+                    <label>
+                        <input type="checkbox" name="platform" value="facebook">
+                        <span>👥 Facebook (Engaging)</span>
+                    </label>
+                    <label>
+                        <input type="checkbox" name="platform" value="instagram">
+                        <span>📸 Instagram (Visual)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" onclick="downloadSpreadsheet('excel')">
+                    📥 Download Excel
+                </button>
+                <button type="button" class="csv" onclick="downloadSpreadsheet('csv')">
+                    📄 Download CSV
+                </button>
+            </div>
+        </form>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div id="loadingText">🔍 Searching for articles about "<span id="topicName"></span>"...</div>
+            <div style="margin-top: 10px; font-size: 14px; opacity: 0.9;">
+                This may take 30-60 seconds depending on the number of articles
+            </div>
+        </div>
+
+        <div class="success" id="success"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        function setTopic(topic) {
+            document.getElementById('topic').value = topic;
+        }
+
+        async function downloadSpreadsheet(format) {
+            const topic = document.getElementById('topic').value;
+            const numResults = parseInt(document.getElementById('num_results').value);
+            const searchType = document.getElementById('search_type').value;
+            const platforms = Array.from(document.querySelectorAll('input[name="platform"]:checked'))
+                .map(cb => cb.value);
+
+            if (!topic || platforms.length === 0) {
+                showError('Please enter a topic and select at least one platform');
+                return;
+            }
+
+            hideMessages();
+            showLoading(topic);
+
+            const startTime = Date.now();
+
+            try {
+                const response = await fetch('http://localhost:8000/search-and-aggregate/export', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        topic: topic,
+                        num_results: numResults,
+                        platforms: platforms,
+                        export_format: format,
+                        search_type: searchType
+                    })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.detail || 'Failed to generate spreadsheet');
+                }
+
+                // Download the file
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${topic.replace(/\s+/g, '-')}_social_media.${format === 'excel' ? 'xlsx' : 'csv'}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+                showSuccess(`✅ Successfully generated ${format.toUpperCase()} file for "${topic}"!<br>
+                    📊 ${numResults} articles processed in ${duration} seconds<br>
+                    📱 Posts created for: ${platforms.join(', ')}<br>
+                    💾 File downloaded: ${a.download}`);
+            } catch (err) {
+                showError('❌ Error: ' + err.message + '<br><br>💡 Try reducing the number of articles or check your internet connection.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading(topic) {
+            document.getElementById('topicName').textContent = topic;
+            document.getElementById('loading').style.display = 'block';
+            disableButtons(true);
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            disableButtons(false);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('success');
+            successDiv.innerHTML = message;
+            successDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.innerHTML = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('success').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function disableButtons(disabled) {
+            document.querySelectorAll('button').forEach(btn => btn.disabled = disabled);
+        }
+
+        // Update loading text periodically
+        let loadingInterval;
+        function showLoading(topic) {
+            document.getElementById('topicName').textContent = topic;
+            document.getElementById('loading').style.display = 'block';
+            disableButtons(true);
+
+            const messages = [
+                '🔍 Searching for articles...',
+                '📰 Found articles, fetching content...',
+                '🤖 AI is analyzing and summarizing...',
+                '📱 Generating social media posts...',
+                '📊 Creating spreadsheet...'
+            ];
+
+            let messageIndex = 0;
+            loadingInterval = setInterval(() => {
+                messageIndex = (messageIndex + 1) % messages.length;
+                document.getElementById('loadingText').innerHTML =
+                    messages[messageIndex] + '<br><small>Processing: "' + topic + '"</small>';
+            }, 8000);
+        }
+
+        function hideLoading() {
+            clearInterval(loadingInterval);
+            document.getElementById('loading').style.display = 'none';
+            disableButtons(false);
+        }
+    </script>
+</body>
+</html>

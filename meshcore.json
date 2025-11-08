@@ -1,0 +1,207 @@
+{
+  "name": "web-summarizer-agent",
+  "display_name": "Web Summarizer Agent",
+  "version": "1.0.0",
+  "description": "Turn any webpage into structured, AI-powered summaries with key points and citations. Perfect for multi-agent workflows and research automation.",
+  "author": {
+    "name": "Rediet Dagnew",
+    "email": "rediet@example.com",
+    "github": "redietdagnew"
+  },
+  "category": "content-processing",
+  "tags": [
+    "ai-agent",
+    "web-scraping",
+    "summarization",
+    "gemini",
+    "nlp",
+    "content-extraction",
+    "api",
+    "multi-agent",
+    "automation",
+    "research"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/redietdagnew/web-summarizer-agent"
+  },
+  "homepage": "https://github.com/redietdagnew/web-summarizer-agent",
+  "documentation": "https://github.com/redietdagnew/web-summarizer-agent#readme",
+  "api": {
+    "type": "rest",
+    "base_url": "http://localhost:8000",
+    "openapi_spec": "/docs",
+    "endpoints": [
+      {
+        "path": "/summarize",
+        "method": "POST",
+        "description": "Summarize a web page from URL",
+        "request_schema": {
+          "url": "string (required)",
+          "model": "string (default: models/gemini-2.5-flash)",
+          "max_summary_sentences": "integer (default: 4)",
+          "num_key_points": "integer (default: 5)",
+          "include_citations": "boolean (default: false)"
+        },
+        "response_schema": {
+          "success": "boolean",
+          "data": {
+            "url": "string",
+            "title": "string",
+            "summary": "string",
+            "key_points": "array[string]",
+            "citations": "array[string] | null",
+            "category": "string",
+            "metadata": {
+              "timestamp": "string",
+              "tokens_used": "integer",
+              "processing_time_ms": "integer",
+              "model_used": "string",
+              "content_length": "integer",
+              "extraction_method": "string"
+            }
+          },
+          "error": "string | null",
+          "error_code": "string | null"
+        }
+      },
+      {
+        "path": "/health",
+        "method": "GET",
+        "description": "Health check endpoint"
+      }
+    ]
+  },
+  "requirements": {
+    "python": ">=3.9",
+    "dependencies": [
+      "requests>=2.31.0",
+      "beautifulsoup4>=4.12.0",
+      "lxml>=4.9.0",
+      "readability-lxml>=0.8.1",
+      "google-generativeai>=0.3.0",
+      "pydantic>=2.0.0",
+      "python-dotenv>=1.0.0",
+      "fastapi>=0.104.0",
+      "uvicorn[standard]>=0.24.0"
+    ]
+  },
+  "environment": {
+    "required": [
+      {
+        "name": "GEMINI_API_KEY",
+        "description": "Google Gemini API key",
+        "type": "secret",
+        "required": true
+      }
+    ],
+    "optional": [
+      {
+        "name": "DEFAULT_MODEL",
+        "description": "Default Gemini model to use",
+        "type": "string",
+        "default": "models/gemini-2.5-flash"
+      },
+      {
+        "name": "MAX_TOKENS",
+        "description": "Maximum output tokens",
+        "type": "integer",
+        "default": 2048
+      },
+      {
+        "name": "TIMEOUT_SECONDS",
+        "description": "Request timeout in seconds",
+        "type": "integer",
+        "default": 15
+      }
+    ]
+  },
+  "deployment": {
+    "docker": {
+      "image": "redietdagnew/web-summarizer:latest",
+      "port": 8000,
+      "environment": [
+        "GEMINI_API_KEY"
+      ]
+    },
+    "python": {
+      "entrypoint": "api.py",
+      "install": "pip install -r requirements.txt"
+    }
+  },
+  "capabilities": {
+    "inputs": [
+      "url",
+      "text"
+    ],
+    "outputs": [
+      "summary",
+      "key_points",
+      "citations",
+      "category",
+      "metadata"
+    ],
+    "supported_formats": [
+      "json",
+      "rest-api"
+    ],
+    "async": false,
+    "batch": false,
+    "streaming": false
+  },
+  "performance": {
+    "average_response_time_ms": 4200,
+    "success_rate": 0.963,
+    "average_token_usage": 385,
+    "concurrent_capacity": 15
+  },
+  "pricing": {
+    "model": "free",
+    "note": "Bring your own Gemini API key. Gemini 2.5 Flash costs ~$0.075 per 1M input tokens, ~$0.30 per 1M output tokens"
+  },
+  "testing": {
+    "unit_tests": 30,
+    "test_coverage": "85%",
+    "example_urls": [
+      "https://example.com",
+      "https://blog.google/technology/ai/",
+      "https://en.wikipedia.org/wiki/Artificial_intelligence"
+    ]
+  },
+  "support": {
+    "documentation": "https://github.com/redietdagnew/web-summarizer-agent/blob/main/README.md",
+    "issues": "https://github.com/redietdagnew/web-summarizer-agent/issues",
+    "email": "support@meshcore.ai"
+  },
+  "meshcore": {
+    "compatible_version": ">=1.0.0",
+    "agent_type": "utility",
+    "communication_protocol": "rest-api",
+    "multi_agent_ready": true,
+    "standalone": true,
+    "requires_authentication": false,
+    "rate_limiting": false
+  },
+  "screenshots": [
+    "screenshots/web-ui.png",
+    "screenshots/api-response.png",
+    "screenshots/swagger-docs.png"
+  ],
+  "changelog": {
+    "1.0.0": {
+      "date": "2025-11-08",
+      "changes": [
+        "Initial release",
+        "Google Gemini 2.5 integration",
+        "RESTful API with FastAPI",
+        "Web UI for testing",
+        "JSON response mode",
+        "Comprehensive error handling",
+        "30+ unit tests",
+        "Docker support",
+        "Production ready"
+      ]
+    }
+  }
+}

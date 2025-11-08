@@ -79,19 +79,19 @@ class AISummarizer:
 
             logger.info(f"Sending {len(text)} characters to {model} for summarization")
 
-            # Initialize Gemini model
-            gemini_model = genai.GenerativeModel(model)
-
-            # Configure generation
-            generation_config = GenerationConfig(
-                temperature=0.3,
-                max_output_tokens=2048,
+            # Initialize Gemini model with JSON response format
+            gemini_model = genai.GenerativeModel(
+                model,
+                generation_config=GenerationConfig(
+                    temperature=0.3,
+                    max_output_tokens=2048,
+                    response_mime_type="application/json",
+                )
             )
 
             # Call Gemini API
             response = gemini_model.generate_content(
                 prompt,
-                generation_config=generation_config,
                 request_options={"timeout": timeout},
             )
 
@@ -163,25 +163,25 @@ class AISummarizer:
   - "citations": Array of 2-3 notable quotes or key statements from the text (verbatim)
 """
 
-        prompt = f"""You are an expert content summarizer. Analyze the following web content and provide a structured summary.
+        prompt = f"""You are an expert content summarizer. Analyze the following web content and provide a structured summary in JSON format.
 
 {title_info}Content:
 {text}
 
-Please provide a JSON response with the following structure:
+Provide a JSON response with this exact structure:
 {{
   "summary": "A concise summary in {max_summary_sentences} sentences or less that captures the main message and purpose",
-  "key_points": Array of {num_key_points} key takeaways or main points (as strings){citations_instruction},
-  "category": "The primary category or topic (e.g., Technology, Business, Health, Politics, etc.)"
+  "key_points": ["point 1", "point 2", "point 3", "point 4", "point 5"],
+  "category": "The primary category or topic (e.g., Technology, Business, Health, Politics, etc.)"{', "citations": ["quote 1", "quote 2", "quote 3"]' if include_citations else ''}
 }}
 
-Focus on:
-- The main message and thesis
-- Key facts, findings, or arguments
-- Important conclusions or recommendations
-- Actionable insights if present
+Requirements:
+- summary: {max_summary_sentences} sentences maximum
+- key_points: Exactly {num_key_points} key takeaways as an array of strings{f'''
+- citations: 2-3 notable verbatim quotes from the text''' if include_citations else ''}
+- category: Single word or short phrase
 
-Ensure your response is valid JSON only, with no additional text or explanation."""
+Focus on the main message, key facts, conclusions, and actionable insights."""
 
         return prompt
 
