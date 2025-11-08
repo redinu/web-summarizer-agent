@@ -72,12 +72,15 @@ class URLFetcher:
 
         try:
             logger.info(f"Fetching URL: {url}")
-            response = requests.get(
+            # Create session to configure max redirects
+            session = requests.Session()
+            session.max_redirects = self.max_redirects
+
+            response = session.get(
                 url,
                 headers=headers,
                 timeout=self.timeout,
                 allow_redirects=True,
-                max_redirects=self.max_redirects,
             )
 
             # Check for HTTP errors
@@ -116,6 +119,9 @@ class URLFetcher:
 
             return response.text, final_url
 
+        except FetchError:
+            # Re-raise FetchError as-is
+            raise
         except Timeout:
             raise FetchError(
                 f"Request timeout after {self.timeout} seconds: {url}",

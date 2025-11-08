@@ -40,8 +40,9 @@ class TestContentExtractor:
                 <a href="/about">About</a>
             </nav>
             <article>
-                <p>This is the main content that should be extracted.</p>
-                <p>More important content here.</p>
+                <p>This is the main content that should be extracted from this important article.</p>
+                <p>More important content here with additional details to reach minimum length.</p>
+                <p>Even more content to ensure we have enough text for extraction to succeed.</p>
             </article>
         </body>
         </html>
@@ -64,8 +65,9 @@ class TestContentExtractor:
         <body>
             <script>console.log('test');</script>
             <article>
-                <p>This is the actual content we want to keep.</p>
-                <p>And more important text here.</p>
+                <p>This is the actual content we want to keep from the article.</p>
+                <p>And more important text here with useful information for the reader.</p>
+                <p>Additional paragraphs ensure we meet the minimum content length requirement.</p>
             </article>
         </body>
         </html>
@@ -86,8 +88,9 @@ class TestContentExtractor:
             <div class="advertisement">Buy our product!</div>
             <aside class="sidebar">Related articles</aside>
             <article>
-                <p>Main article content that is important.</p>
-                <p>This should be extracted successfully.</p>
+                <p>Main article content that is important and contains valuable information for readers.</p>
+                <p>This should be extracted successfully without any advertising or sidebar content.</p>
+                <p>Additional text to ensure we meet the minimum required length for extraction.</p>
             </article>
         </body>
         </html>
@@ -136,10 +139,11 @@ class TestContentExtractor:
         <html>
         <body>
             <article>
-                <p>This    has    extra    spaces.</p>
+                <p>This    has    extra    spaces    that    should    be    cleaned    properly.</p>
 
 
-                <p>And multiple blank lines.</p>
+                <p>And multiple blank lines that need to be normalized in the extracted content.</p>
+                <p>Additional content to ensure we meet minimum length requirements for extraction.</p>
             </article>
         </body>
         </html>

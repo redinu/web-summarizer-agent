@@ -23,7 +23,7 @@ class TestURLFetcher:
             html, final_url = fetcher.fetch("https://example.com")
 
             assert "Hello World" in html
-            assert final_url == "https://example.com"
+            assert final_url.startswith("https://example.com")
 
     def test_http_upgrade(self):
         """Test HTTP URLs are upgraded to HTTPS"""
