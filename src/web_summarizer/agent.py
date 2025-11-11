@@ -37,6 +37,9 @@ class WebSummarizerAgent:
         user_agent: str = "WebSummarizerAgent/1.0.0",
         min_content_length: int = 100,
         max_content_length: int = 50000,
+        enable_rag: bool = False,
+        rag_persist_dir: str = "./chroma_db",
+        rag_embedding_model: str = "sentence-transformers",
     ):
         """
         Initialize the Web Summarizer Agent
@@ -48,6 +51,9 @@ class WebSummarizerAgent:
             user_agent: User agent string for requests
             min_content_length: Minimum content length to process
             max_content_length: Maximum content length (will be truncated)
+            enable_rag: Enable RAG (Retrieval-Augmented Generation) features
+            rag_persist_dir: Directory to persist RAG vector database
+            rag_embedding_model: "sentence-transformers" (free) or "gemini" (uses API key)
         """
         self.fetcher = URLFetcher(
             timeout=timeout,
@@ -59,6 +65,23 @@ class WebSummarizerAgent:
             max_content_length=max_content_length,
         )
         self.summarizer = AISummarizer(api_key=gemini_api_key)
+        self.gemini_api_key = gemini_api_key
+
+        # Initialize RAG if enabled
+        self.rag_enabled = enable_rag
+        self.rag_engine = None
+        if enable_rag:
+            try:
+                from web_summarizer.rag_engine import RAGEngine
+                self.rag_engine = RAGEngine(
+                    persist_directory=rag_persist_dir,
+                    embedding_model=rag_embedding_model,
+                    gemini_api_key=gemini_api_key if rag_embedding_model == "gemini" else None
+                )
+                logger.info("RAG engine initialized")
+            except Exception as e:
+                logger.error(f"Failed to initialize RAG: {e}")
+                self.rag_enabled = False
 
         logger.info("WebSummarizerAgent initialized")
 
@@ -119,6 +142,24 @@ class WebSummarizerAgent:
             )
 
             logger.info(f"Successfully summarized {url} in {processing_time_ms}ms")
+
+            # Store in RAG if enabled
+            if self.rag_enabled and self.rag_engine:
+                try:
+                    self.rag_engine.store_summary(
+                        url=final_url,
+                        title=title,
+                        summary=data.summary,
+                        key_points=data.key_points,
+                        category=data.category or "",
+                        metadata={
+                            "tokens_used": metadata.tokens_used,
+                            "processing_time_ms": metadata.processing_time_ms
+                        }
+                    )
+                    logger.info(f"Stored summary in RAG database")
+                except Exception as rag_error:
+                    logger.warning(f"Failed to store in RAG: {rag_error}")
 
             return SummaryResponse(success=True, data=data)
 

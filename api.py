@@ -43,12 +43,21 @@ app.add_middleware(
 
 # Initialize agent
 try:
+    # Check if RAG should be enabled
+    enable_rag = os.getenv("ENABLE_RAG", "false").lower() == "true"
+    rag_embedding = os.getenv("RAG_EMBEDDING_MODEL", "sentence-transformers")
+
     agent = WebSummarizerAgent(
-        gemini_api_key=os.getenv("GEMINI_API_KEY")
+        gemini_api_key=os.getenv("GEMINI_API_KEY"),
+        enable_rag=enable_rag,
+        rag_embedding_model=rag_embedding
     )
     topic_aggregator = TopicAggregator(agent)
     spreadsheet_generator = SpreadsheetGenerator()
     web_searcher = WebSearcher(search_engine="duckduckgo")
+
+    if enable_rag:
+        print(f"✅ RAG enabled with {rag_embedding} embeddings")
 except ValueError as e:
     print(f"⚠️ Warning: {e}")
     print("Please set GEMINI_API_KEY in your .env file")
@@ -93,6 +102,18 @@ class TopicSearchRequest(BaseModel):
     search_type: Optional[str] = "web"  # web or news
     allowed_domains: Optional[list[str]] = None
     blocked_domains: Optional[list[str]] = None
+
+
+class RAGSearchRequest(BaseModel):
+    """Request model for RAG semantic search"""
+    query: str
+    n_results: Optional[int] = 5
+
+
+class RAGQueryRequest(BaseModel):
+    """Request model for RAG question answering"""
+    question: str
+    n_context_docs: Optional[int] = 3
 
 
 # API Endpoints
@@ -1013,11 +1034,132 @@ async def search_and_aggregate_export(request: TopicSearchRequest):
         )
 
 
+@app.post("/rag/search")
+async def rag_search(request: RAGSearchRequest):
+    """
+    Search for similar summaries in the RAG knowledge base
+
+    Requires ENABLE_RAG=true environment variable
+    """
+    if not agent or not agent.rag_enabled or not agent.rag_engine:
+        raise HTTPException(
+            status_code=503,
+            detail="RAG is not enabled. Set ENABLE_RAG=true in environment"
+        )
+
+    try:
+        results = agent.rag_engine.search_similar(
+            query=request.query,
+            n_results=request.n_results
+        )
+
+        return {
+            "success": True,
+            "query": request.query,
+            "results_count": len(results),
+            "results": results
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"RAG search failed: {str(e)}"
+        )
+
+
+@app.post("/rag/query")
+async def rag_query(request: RAGQueryRequest):
+    """
+    Ask a question and get an AI-generated answer using RAG
+
+    Retrieves relevant context from stored summaries and generates an answer using Gemini
+    """
+    if not agent or not agent.rag_enabled or not agent.rag_engine:
+        raise HTTPException(
+            status_code=503,
+            detail="RAG is not enabled. Set ENABLE_RAG=true in environment"
+        )
+
+    try:
+        # Generate response using RAG
+        import google.generativeai as genai
+        model = genai.GenerativeModel(os.getenv("DEFAULT_MODEL", "models/gemini-2.5-flash"))
+
+        result = agent.rag_engine.generate_with_context(
+            query=request.question,
+            gemini_model=model,
+            n_context_docs=request.n_context_docs
+        )
+
+        return {
+            "success": True,
+            "question": request.question,
+            "answer": result["answer"],
+            "sources": result["sources"],
+            "context_documents_used": result["context_used"]
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"RAG query failed: {str(e)}"
+        )
+
+
+@app.get("/rag/stats")
+async def rag_stats():
+    """Get statistics about the RAG knowledge base"""
+    if not agent or not agent.rag_enabled or not agent.rag_engine:
+        raise HTTPException(
+            status_code=503,
+            detail="RAG is not enabled. Set ENABLE_RAG=true in environment"
+        )
+
+    try:
+        stats = agent.rag_engine.get_stats()
+        return {
+            "success": True,
+            "stats": stats
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get stats: {str(e)}"
+        )
+
+
+@app.delete("/rag/clear")
+async def rag_clear():
+    """Clear all documents from the RAG knowledge base"""
+    if not agent or not agent.rag_enabled or not agent.rag_engine:
+        raise HTTPException(
+            status_code=503,
+            detail="RAG is not enabled. Set ENABLE_RAG=true in environment"
+        )
+
+    try:
+        success = agent.rag_engine.clear_all()
+        if success:
+            return {
+                "success": True,
+                "message": "All documents cleared from RAG knowledge base"
+            }
+        else:
+            raise HTTPException(status_code=500, detail="Failed to clear database")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to clear database: {str(e)}"
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
 
     print("🚀 Starting Web Summarizer API...")
     print("📖 Open http://localhost:8000 in your browser")
     print("📚 API docs: http://localhost:8000/docs")
+    if agent and agent.rag_enabled:
+        print("🧠 RAG (Retrieval-Augmented Generation) ENABLED")
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
